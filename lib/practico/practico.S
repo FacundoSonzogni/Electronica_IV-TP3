@@ -37,9 +37,9 @@
  */
 defun suma
     push {r4-r11,lr}
-    // Insertar código a continuación
 
-    // Retorno, antes R0 debe tener el valor correcto
+    ADD R0, R1
+
     pop {r4-r11,pc}
 endfun suma
 
@@ -58,10 +58,31 @@ endfun suma
  */
 defun sumatoria
     push {r4-r11,lr}
-    // Insertar código a continuación
 
-    // Retorno, antes R1:R0 debe tener el valor correcto
-    pop {r4-r11,pc}
+    mov R3, R0 //En R3 se guarda "n"
+    mov R4, R1 //En R4 se guarda "b"
+
+    mov R0, #0 // R0 se inicializa en 0 (primeros 32 bits de A)
+    mov R1, #0 // R1 se inicializa en 0 (últimos 32 bita de A)
+
+    mov R2, #0 // En R2 se guarda "i" y se inicializa en 0
+
+    lazo_sum:
+        cmp R2, R3 // flags <- i-n
+        bge fin_sum  // Salta a la etiqueta fin_sum, si i >= n
+
+        ldr R5, [R4,R2,lsl #2] // aux <- b[i]
+
+        adds R0, R0, R5 // A la parte inferior de A (R0) se le suma b[i]
+        add R1, R1, #0 // Si hubiera un carry, se suma a la parte superior de A (R1)
+
+        adds R2, R2, #1 // Incrementa el índice en 1
+
+        b lazo_sum  // Repite el Lazo, mientras i sea menor que n
+
+    fin_sum:
+        pop {r4-r11,pc}
+
 endfun sumatoria
 
 /**
@@ -79,11 +100,48 @@ endfun sumatoria
  */
 defun posicion_maximo
     push {r4-r11,lr}
-    // Insertar código a continuación
 
-    // Retorno, antes R0 debe tener el valor correcto
-    pop {r4-r11,pc}
-endfun posicion_maximo
+    mov R3, R0 // En R3 se guarda "n", cantidad de números
+    mov R4, R1 // En R4 se guarda "b", arreglo de n números
+
+    mov R2, #0 // R2 se inicializa en 0 y guarda "MAX", VALOR del máximo número
+    mov R1, #0 // R1 se inicializa en 0 y guarda "i", índice
+    mov R0, #0 // R0 se inicializa en 0 y guarda "k", POSICIÓN del máximo número del arreglo
+
+    condicional_pos_max:
+        cmp R3, #1 // flags <- n-1
+        ble fin_pos_max // Salta a la etiqueta fin_pos_max si n <= 1
+
+        ldr R2, [R4,R0,lsl #2] // MAX <- b[k]
+        mov R1, #1 // Se asigna i <- 1
+
+        b lazo1_pos_max // Salta a la etiqueta lazo1_pos_max
+    
+    lazo1_pos_max:
+        cmp R1, R3 // flags <- i-n
+        bge fin_pos_max  // Salta a la etiqueta fin_pos_max, si i >= n
+
+        b lazo2_pos_max // Salta a la etiqueta lazo2_pos_max
+
+    lazo2_pos_max:
+        ldr R5, [R4,R1, lsl #2] // A una variable auxiliar en R5 se le asigna b[i] 
+
+        cmp R2, R5 // flags <-  MAX-b[i]
+        bge aumetar_indice  // Salta a la etiqueta aumentar_indice, si MAX >= b[i]   
+
+        mov R2, R5 // MAX <- b[i]
+        mov R0, R1 // k <- i
+
+        b aumentar_indice // Salta a la etiqueta aumentar_indice
+    
+    aumentar_indice:
+        adds R1, R1, #1 // Se incrementa el índice en 1
+
+        b lazo1_pos_max // Salta de regresa a la etiqueta lazo1_pos_max mientras i<n
+
+    fin_pos_max:
+        pop {r4-r11,pc}
+endfun posicion_maximo 
 
 /**
  * Ordenar de menor a mayor un arreglo de números en memoria.
@@ -104,8 +162,35 @@ endfun posicion_maximo
  */
 defun ordenar_en_sitio_menor_a_mayor
     push {r4-r11,lr}
-    // Insertar código a continuación
+    
+    mov R0, R0 // En R0 se guarda "n", cantidad de números en el arreglo
+    mov R1, R1 // En R1 se guarda "b", arreglo de n números de 32 bits
+    mov R2, #0 // En R2 se guarda "k" y se inicializa en 0
 
-    // Retorno
-    pop {r4-r11,pc}
+    subs R3, R0, #1 // En R3 se guarda n-1
+    mov R2, R3 // k <- n-1
+
+    b lazo_ordenar // Salta a la etiqueta lazo_ordenar
+
+    lazo_ordenar:
+        cmp R2, #0 // flags <- k-0
+        ble fin_ordenar // Salta a la etiqueta fin_ordenar si k <= 0
+
+        /*Se hace una llamada a subrutina. Reservamos R4 para el índice "j" y le asignamos pos_max*/
+
+        mov R5 , #0 // En R5 se guarda "x" y se inicializa en 0
+
+        ldr R6, [R1,R2, lsl #2] // En R6 se guarda b[k] 
+        ldr R7, [R1,R4, lsl #2] // En R7 se guarda b[j]
+
+        mov R5, R6 // x <- b[k]
+        mov R6, R7 // b[k] <- b[j]
+        mov R7, R5 // b[j] <- x
+
+        subs R2, R2, #1 // Se resta 1 del valor de k
+
+        b lazo_ordenar // Repite el lazo hasta que k <= 0
+
+    fin_ordenar:
+        pop {r4-r11,pc}
 endfun ordenar_en_sitio_menor_a_mayor
