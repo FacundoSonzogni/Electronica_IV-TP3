@@ -127,7 +127,7 @@ defun posicion_maximo
         ldr R5, [R4,R1, lsl #2] // A una variable auxiliar en R5 se le asigna b[i] 
 
         cmp R2, R5 // flags <-  MAX-b[i]
-        bge aumetar_indice  // Salta a la etiqueta aumentar_indice, si MAX >= b[i]   
+        bge aumentar_indice  // Salta a la etiqueta aumentar_indice, si MAX >= b[i]   
 
         mov R2, R5 // MAX <- b[i]
         mov R0, R1 // k <- i
