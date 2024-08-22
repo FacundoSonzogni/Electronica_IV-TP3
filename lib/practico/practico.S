@@ -69,18 +69,27 @@ defun sumatoria
 
     lazo_sum:
         cmp R2, R3 // flags <- i-n
-        bge fin_sum  // Salta a la etiqueta fin_sum, si i >= n
+        bge fin  // Salta a la etiqueta fin_sum, si i >= n
 
         ldr R5, [R4,R2,lsl #2] // aux <- b[i]
+        
+        cmp R5, #0
+        blt valor_negativo // Salta si el valor de R5 es negativo
 
         adds R0, R0, R5 // A la parte inferior de A (R0) se le suma b[i]
-        add R1, R1, #0 // Si hubiera un carry, se suma a la parte superior de A (R1)
+        adc R1, R1, #0 // Si hubiera un carry, se suma a la parte superior de A (R1)
 
-        adds R2, R2, #1 // Incrementa el índice en 1
+        b fin_sum  // Repite el Lazo, mientras i sea menor que n
 
-        b lazo_sum  // Repite el Lazo, mientras i sea menor que n
+    valor_negativo:
+        adds R0, R0, R5
+        adc R1, #-1
 
     fin_sum:
+        adds R2, R2, #1 // Incrementa el índice en 1
+        b lazo_sum
+
+    fin:
         pop {r4-r11,pc}
 
 endfun sumatoria
@@ -140,7 +149,6 @@ defun posicion_maximo
         b lazo1_pos_max // Salta de regresa a la etiqueta lazo1_pos_max mientras i<n
 
     fin_pos_max:
-        bx lr
         pop {r4-r11,pc}
 endfun posicion_maximo 
 
@@ -164,39 +172,32 @@ endfun posicion_maximo
 defun ordenar_en_sitio_menor_a_mayor
     push {r4-r12,lr}
     
-    mov R4, R4 // En R4 se guarda "n", cantidad de números en el arreglo 
-    mov R5, R5 // En R5 se guarda "b", arreglo de n números de 32 bits 
+    mov R4, R0 // En R4 se guarda "n", cantidad de números en el arreglo 
+    mov R5, R1 // En R5 se guarda "b", arreglo de n números de 32 bits 
     mov R6, #0 // En R6 se guarda "k" y se inicializa en 0 
 
     subs R7, R4, #1 // En R7 se guarda n-1 
     mov R6, R7 // k <- n-1
 
-    b lazo_ordenar // Salta a la etiqueta lazo_ordenar
-
     lazo_ordenar:
         cmp R6, #0 // flags <- k-0
         ble fin_ordenar // Salta a la etiqueta fin_ordenar si k <= 0
 
-        adds R12, R6, #1
-        mov R0, R12 // En R0 se guarda k+1 (Primer parámetro de la subrutina)
+        add R0, R6, #1
         mov R1, R5  // En R1 se guarda b (Segundo parámetro de la subrutina)
 
         bl posicion_maximo // En R0 se guarda "j"
-        mov R8, R0 // En R8 se guardará "j"
 
-        mov R9 , #0 // En R9 se guarda "x" y se inicializa en 0 
+        ldr R7, [R5,R6, lsl #2] // En R7 se guarda b[k] 
+        ldr R8, [R5,R0, lsl #2] // En R8 se guarda b[j]
 
-        ldr R10, [R5,R6, lsl #2] // En R10 se guarda b[k] 
-        ldr R11, [R5,R8, lsl #2] // En R11 se guarda b[j]
-
-        mov R9, R10 // x <- b[k]
-        mov R10, R11 // b[k] <- b[j]
-        mov R11, R9 // b[j] <- x
+        str R7, [R5,R0, lsl #2]
+        str R8, [R5,R6, lsl #2]
 
         subs R6, R6, #1 // Se resta 1 del valor de k
 
         b lazo_ordenar // Repite el lazo hasta que k <= 0
 
-    fin_ordenar:
+    fin_ordenar: 
         pop {r4-r12,pc}
 endfun ordenar_en_sitio_menor_a_mayor
